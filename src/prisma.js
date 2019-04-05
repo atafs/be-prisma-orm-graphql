@@ -2,69 +2,87 @@ import { Prisma } from 'prisma-binding'
 
 // prisma object
 const prisma = new Prisma({
-    typeDefs: 'src/generated/prisma.graphql',
-    endpoint: 'http://localhost:4466'
+  typeDefs: 'src/generated/prisma.graphql',
+  endpoint: 'http://localhost:4466'
 })
 
-// TODO replace this code by async functions
-// prisma.query (matches exactly with query name in the documentations)
-// const users = prisma.query.users(null, '{ id name posts { id title } }').then(data => {
-//     console.log('Query Users:', JSON.stringify(data, undefined, 4))
+// prisma.exists.User({
+//     id: "cjt92nxg6015x0752envn53vp",
+//     author: {
+//         id: ""
+//     }
+// }).then(exists => {
+//     console.log('Exists: ', exists)
 // })
 
-// prisma.query.comments(null, '{ id text author { id name } }').then(data => {
-//     console.log('Query Comments:', JSON.stringify(data, undefined, 4))
-// })
+// replaced call back functions inside of promisses by async functions
 const createPostForUser = async (authorId, data) => {
-    const post = await prisma.mutation.createPost({
-        data: {
-            ...data,
-            author: {
-                connect: {
-                    id: authorId
-                }
-            }
-        }
-    }, '{ id }')
+  // verify that the user exists
+  const userExists = await prisma.exists.User({ id: authorId })
 
-    const user = await prisma.query.user({
-        where: {
+  if (!userExists) {
+    throw new Error('User not found!!')
+  }
+
+  const post = await prisma.mutation.createPost(
+    {
+      data: {
+        ...data,
+        author: {
+          connect: {
             id: authorId
-        } 
-    }, '{ id name email posts { id title published } }')
-    return user
-}
+          }
+        }
+      }
+    },
+    '{ author { id name posts { id title published } } }'
+  )
 
-// createPostForUser('cjt9333h501bb0752r4ojvdzz', {
-//     title: 'great books to read',
-//     body: 'the art of war',
-//     published: true
-// }).then(user => {
-//     console.log(JSON.stringify(user, undefined, 4))
-// })
+  const { author } = post
+  return author
+}
 
 const updatePostForUser = async (postId, data) => {
-    const post = await prisma.mutation.updatePost({
-        where: {
-            id: postId
-        },
-        data
-    }, '{ author { id } }')
+  // verify that the user exists
+  const postExists = await prisma.exists.Post({ id: postId })
 
-    const user = await prisma.query.user({
-        where: {
-            id: post.author.id
-        }
-    }, '{ id name posts { id title published } }')
+  if (!postExists) {
+    throw new Error('Post not found!!')
+  }
 
-    return user
+  const post = await prisma.mutation.updatePost(
+    {
+      where: {
+        id: postId
+      },
+      data
+    },
+    '{ author { id name posts { id title published } } }'
+  )
+
+  const { author } = post
+  return author
 }
 
-updatePostForUser('cjt92pawb016z0752rremxqaf', { published: false }).then(user => {
-    console.log(JSON.stringify(user, undefined, 4))
-})
+// call the async functions
+// createPostForUser('cju3u4lbt00c60752xuuqms6j', {
+//   title: 'great books to read',
+//   body: 'the art of war',
+//   published: true
+// })
+//   .then(user => {
+//     console.log(JSON.stringify(user, undefined, 4))
+//   })
+//   .catch(error => {
+//     console.log('Error: ', error.message)
+//   })
 
-// prisma.mutation 
+// updatePostForUser('cjt92pawb016z0752rremxqaf', { published: false }).then(user => {
+//     console.log(JSON.stringify(user, undefined, 4))
+//   }
+// )
+
+// prisma.mutation
 // prisma.mutation.createPost({
 //     data: {
 //         title: "Graphql 101",
@@ -91,13 +109,13 @@ updatePostForUser('cjt92pawb016z0752rremxqaf', { published: false }).then(user =
 //     data: {
 //         body: "This is how to get with GraphQL...",
 //         published: true
-//     } 
+//     }
 // },'{ id }').then(data => {
 //     return prisma.query.posts(null), '{ id title body publihed }'
 // }).then(data => {
 //     console.log(data)
 // })
 
-// prisma.subscripion 
+// prisma.subscripion
 
 // prisma.exists
