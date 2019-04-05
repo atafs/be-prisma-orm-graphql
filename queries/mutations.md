@@ -105,3 +105,33 @@ mutation {
   }
 }
 ```
+
+## create a comment
+```
+mutation {
+  createComment(
+    data: {
+      text: "Business Man!!",
+      author: {
+        connect:{
+          #userId from query users
+          id: "cju3u4lbt00c60752xuuqms6j"
+        }
+      },
+      post: {
+        connect: {
+          # postId from query users
+          id: "cjt92pawb016z0752rremxqaf"
+        }
+      }
+    }
+  ) {
+    id
+    text
+    author {
+      id
+      name
+    }
+  }
+}
+```

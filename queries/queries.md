@@ -33,3 +33,17 @@ query {
   }
 }
 ```
+
+## get all comments
+```
+query {
+  comments {
+    id
+    text
+    author {
+    	id
+      name
+  	}
+  }
+}
+```
